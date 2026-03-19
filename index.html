@@ -2170,15 +2170,19 @@ function deleteAccEntry2(dateStr,id){
 
 
 // ── INIT AUTH ──
+// ── INIT AUTH ──
 async function initAuth2(){
   await setupPWA2();
-  // Show app skeleton while checking auth
   document.getElementById('auth-screen').classList.remove('hidden');
+  
+  // Show spinner while checking if user is already logged in
+  document.getElementById('auth-google-btn').style.display='none';
+  document.getElementById('auth-loading').style.display='flex';
+
   const firebaseOK=initFirebase2();
   if(!firebaseOK){
-    // No Firebase config — show warning on login screen
+    document.getElementById('auth-loading').style.display='none';
     document.getElementById('auth-config-warn').style.display='block';
-    // Still allow local-only use with a bypass button
     const bypassBtn=document.createElement('button');
     bypassBtn.textContent='Use offline (local only)';
     bypassBtn.style.cssText='margin-top:16px;padding:13px 24px;background:transparent;border:1.5px solid rgba(0,0,0,.12);border-radius:12px;font-size:13px;font-weight:600;color:rgba(0,0,0,.45);cursor:pointer;font-family:Inter,sans-serif;width:100%;max-width:320px;letter-spacing:.02em';
@@ -2190,12 +2194,9 @@ async function initAuth2(){
     if(!document.getElementById('bypass-btn2')){bypassBtn.id='bypass-btn2';document.querySelector('.auth-note').after(bypassBtn);}
     return;
   }
-  // Check for redirect result first
-  try{
-    const result=await fbAuth2.getRedirectResult();
-    if(result&&result.user){ /* handled by onAuthStateChanged */ }
-  }catch(e){}
-  // Listen to auth state
+
+  await fbAuth2.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+
   fbAuth2.onAuthStateChanged(async user=>{
     fbUser2=user;
     if(user){
@@ -2205,7 +2206,10 @@ async function initAuth2(){
       buildCL2();renderCal2();initTopbar2();updateMacroTimes2();
       setSyncStatus2('synced');
     }else{
+      // User is genuinely not logged in, show the login button now
       document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('auth-loading').style.display='none';
+      document.getElementById('auth-google-btn').style.display='flex';
     }
   });
 }
