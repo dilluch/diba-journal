@@ -1688,7 +1688,6 @@ function renderStats2(){
 }
 
 // ── TIME PICKER ──
-
 // ── TIME PICKER ──
 let tpHour2=12,tpMin2=0,tpAmPm2='AM';
 let tpScrolling2={hr:null,min:null};
@@ -1696,70 +1695,12 @@ let tpScrolling2={hr:null,min:null};
 function buildTpScrollers2(){
   const hEl=document.getElementById('tp2-hrs');
   const mEl=document.getElementById('tp2-mins');
-  
-  // Create 3 sets of numbers for infinite scrolling
   let hHTML='<div class="tp-highlight-bar"></div>';
-  for(let i=0; i<3; i++) {
-    for(let h=1;h<=12;h++) hHTML+=`<div class="tp-item" data-v="${h}">${h}</div>`;
-  }
+  for(let h=1;h<=12;h++)hHTML+=`<div class="tp-item" data-v="${h}">${h}</div>`;
   hEl.innerHTML=hHTML;
-  
   let mHTML='<div class="tp-highlight-bar"></div>';
-  for(let i=0; i<3; i++) {
-    for(let m=0;m<60;m+=5) mHTML+=`<div class="tp-item" data-v="${m}">${String(m).padStart(2,'0')}</div>`;
-  }
+  for(let m=0;m<60;m+=5)mHTML+=`<div class="tp-item" data-v="${m}">${String(m).padStart(2,'0')}</div>`;
   mEl.innerHTML=mHTML;
-}
-
-function tpScroll2(type){
-  const el=document.getElementById(type==='hr'?'tp2-hrs':'tp2-mins');
-  const itemHeight = 60; 
-  const count = type === 'hr' ? 12 : 12; 
-  const totalHeight = itemHeight * count;
-
-  // Jump to middle set if near boundaries
-  if (el.scrollTop < itemHeight) {
-    el.scrollTop += totalHeight;
-  } else if (el.scrollTop > (totalHeight * 2)) {
-    el.scrollTop -= totalHeight;
-  }
-
-  clearTimeout(tpScrolling2[type]);
-  tpScrolling2[type]=setTimeout(()=>{
-    const items=el.querySelectorAll('.tp-item');
-    const center=el.scrollTop+el.clientHeight/2;
-    let closest=null,closestDist=999999;
-    
-    items.forEach(item=>{
-      const mid=item.offsetTop+item.clientHeight/2;
-      const dist=Math.abs(mid-center);
-      if(dist<closestDist){closestDist=dist;closest=item;}
-    });
-    
-    if(closest){
-      const val=parseInt(closest.dataset.v);
-      if(type==='hr')tpHour2=val;else tpMin2=val;
-      const offset=closest.offsetTop-el.clientHeight/2+closest.clientHeight/2;
-      el.scrollTo({top:Math.max(0,offset),behavior:'smooth'});
-      items.forEach(i=>i.classList.remove('selected'));
-      closest.classList.add('selected');
-      updateTpPreview2();
-    }
-  },120);
-}
-
-function scrollToTpValue2(type,val){
-  const el=document.getElementById(type==='hr'?'tp2-hrs':'tp2-mins');
-  const items=el.querySelectorAll('.tp-item');
-  const count = type === 'hr' ? 12 : 12;
-  
-  items.forEach((item, index)=>{
-    if(parseInt(item.dataset.v)===val && index >= count && index < count * 2){
-      const offset=item.offsetTop-el.clientHeight/2+item.clientHeight/2;
-      el.scrollTo({top:Math.max(0,offset),behavior:'auto'}); 
-      item.classList.add('selected');
-    }
-  });
 }
 
 function openTimePicker2(){
@@ -1773,7 +1714,51 @@ function openTimePicker2(){
   updateTpPreview2();
   document.getElementById('tp2-wrap').classList.add('on');
 }
-// ── END OF PICKER FIX ──
+function closeTimePicker2(){document.getElementById('tp2-wrap').classList.remove('on');}
+function scrollToTpValue2(type,val){
+  const el=document.getElementById(type==='hr'?'tp2-hrs':'tp2-mins');
+  const items=el.querySelectorAll('.tp-item');
+  items.forEach(item=>{if(parseInt(item.dataset.v)===val){const offset=item.offsetTop-el.clientHeight/2+item.clientHeight/2;el.scrollTo({top:Math.max(0,offset),behavior:'smooth'});}});
+}
+function tpScroll2(type){
+  clearTimeout(tpScrolling2[type]);
+  tpScrolling2[type]=setTimeout(()=>{
+    const el=document.getElementById(type==='hr'?'tp2-hrs':'tp2-mins');
+    const items=el.querySelectorAll('.tp-item');
+    const center=el.scrollTop+el.clientHeight/2;
+    let closest=null,closestDist=999999;
+    items.forEach(item=>{const mid=item.offsetTop+item.clientHeight/2;const dist=Math.abs(mid-center);if(dist<closestDist){closestDist=dist;closest=item;}});
+    if(closest){
+      const val=parseInt(closest.dataset.v);
+      if(type==='hr')tpHour2=val;else tpMin2=val;
+      const offset=closest.offsetTop-el.clientHeight/2+closest.clientHeight/2;
+      el.scrollTo({top:Math.max(0,offset),behavior:'smooth'});
+      items.forEach(i=>i.classList.remove('selected'));
+      closest.classList.add('selected');
+      updateTpPreview2();
+    }
+  },120);
+}
+function setAmPm2(v){tpAmPm2=v;syncTpAmPm2();updateTpPreview2();}
+function syncTpAmPm2(){document.getElementById('tp2-am').classList.toggle('on',tpAmPm2==='AM');document.getElementById('tp2-pm').classList.toggle('on',tpAmPm2==='PM');}
+function updateTpPreview2(){const m=String(tpMin2).padStart(2,'0');document.getElementById('tp2-preview').innerHTML=`${tpHour2}<span>:${m} ${tpAmPm2}</span>`;}
+function setTime2(){
+  let h24=tpHour2%12+(tpAmPm2==='PM'?12:0);
+  const val=String(h24).padStart(2,'0')+':'+String(tpMin2).padStart(2,'0');
+  document.getElementById('task2-time-inp').value=val;
+  const disp=tpHour2+':'+String(tpMin2).padStart(2,'0')+' '+tpAmPm2;
+  const box=document.getElementById('time2-display-val');
+  if(box){box.textContent=disp;box.style.color='var(--tx)';box.style.fontWeight='700';}
+  closeTimePicker2();
+}
+function clearTime2(){
+  document.getElementById('task2-time-inp').value='';
+  const box=document.getElementById('time2-display-val');
+  if(box){box.textContent='Not set';box.style.color='var(--tx2)';box.style.fontWeight='400';}
+  closeTimePicker2();
+}
+
+// ── DAY CHIP TOGGLES ──
 
 // ── DAY CHIP TOGGLES ──
 document.getElementById('task2-days').querySelectorAll('.tog').forEach(chip=>{
