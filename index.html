@@ -1881,7 +1881,7 @@ function signInWithGoogle2(){
   document.getElementById('auth-google-btn').style.display='none';
   document.getElementById('auth-loading').style.display='flex';
   const provider=new firebase.auth.GoogleAuthProvider();
-  fbAuth2.signInWithRedirect(provider).catch(err=>{
+  fbAuth2.signInWithPopup(provider).catch(err=>{
     document.getElementById('auth-google-btn').style.display='flex';
     document.getElementById('auth-loading').style.display='none';
     console.error('Sign in error:',err);
